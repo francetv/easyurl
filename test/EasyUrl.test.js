@@ -38,10 +38,63 @@
                     newparam: null
                 };
 
-                url = url.toString();
-
-                chai.assert.equal(url, 'http://user:pass@changed.domain.tld:42/new/path?newsearch=value&newparam#hash');
+                chai.assert.equal(url.toString(), 'http://user:pass@changed.domain.tld:42/new/path?newsearch=value&newparam#hash');
+                chai.assert.equal(url.format(), 'http://user:pass@changed.domain.tld:42/new/path?newsearch=value&newparam#hash');
             });
+
+            it('Should format a URL relative to another', function() {
+                var url = new EasyUrl('relative/path', 'http://domain.tld/path/');
+
+                chai.assert.equal(url.toString(), 'http://domain.tld/path/relative/path');
+            });
+
+            it('Should format a URL from an object', function() {
+                var url = new EasyUrl({
+                    protocol: 'http:',
+                    hostname: 'domain.tld',
+                    pathname: '/path',
+                    query: {
+                        query1: 'value1',
+                        query2: 'value2'
+                    }
+                });
+
+                chai.assert.equal(url.toString(), 'http://domain.tld/path?query1=value1&query2=value2');
+            });
+
+            it('Should return an URL object with toObject method', function() {
+                var url = new EasyUrl('http://user:pass@domain.tld:1337/path?search&param=value#hash');
+
+                try {
+                    chai.assert.deepEqual(url.toObject(), {
+                        protocol: "http:",
+                        slashedProtocol: true,
+                        auth: "user:pass",
+                        hostname:  "domain.tld",
+                        port: 1337,
+                        pathname: "/path",
+                        search: "?search&param=value",
+                        hash: "#hash",
+                        user: "user",
+                        pass: "pass",
+                        host: "domain.tld:1337",
+                        path: "/path?search&param=value",
+                        query: {
+                            search: null,
+                            param: "value"
+                        }
+                    });
+                }
+                catch(error) {
+                    console.log('actual:');
+                    console.log(error.actual);
+                    console.log('expected:');
+                    console.log(error.expected);
+
+                    throw new Error('This error object makes mocha-phantomjs crash so we throw another one');
+                }
+            });
+
         });
     }
 
