@@ -187,6 +187,7 @@
             }
 
             parsedUrl.protocol = relativeTo.protocol;
+            parsedUrl.slashedProtocol = relativeTo.slashedProtocol;
             parsedUrl.auth = relativeTo.auth;
             parsedUrl.hostname = relativeTo.hostname;
             parsedUrl.port = relativeTo.port;
