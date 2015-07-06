@@ -1,0 +1,37 @@
+{
+  "name": "EasyUrl",
+  "version": "0.0.0",
+  "description": "Simple Url parsing tool",
+  "authors": [
+    "FTVEN"
+  ],
+  "moduleType": [
+    "amd",
+    "globals"
+  ],
+  "keywords": [
+    "url",
+    "parsing"
+  ],
+  "license": "MIT",
+  "private": true,
+  "homepage": "https://github.com/francetv/easyurl",
+  "main": "EasyUrl.min.js",
+  "devDependencies": {
+    "requirejs-bower": "*",
+    "mocha": "*",
+    "chai": "*",
+    "sinonjs": "*"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "src",
+    "cov.html",
+    "Gruntfile.js",
+    "grunt-tasks",
+    "package.json"
+  ]
+}
