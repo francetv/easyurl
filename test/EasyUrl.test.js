@@ -3,20 +3,44 @@
 
         return describe('EasyUrl', function() {
             it('Should parse a simple URL', function() {
-                var url = new EasyUrl('http://user:pass@domain.tld:1337/path?search#hash');
+                var url = new EasyUrl('http://user:pass@domain.tld:1337/path?search&param=value#hash');
 
                 chai.assert.equal(url.protocol, 'http:');
                 chai.assert.equal(url.auth, 'user:pass');
                 chai.assert.equal(url.hostname, 'domain.tld');
                 chai.assert.equal(url.port, 1337);
                 chai.assert.equal(url.pathname, '/path');
-                chai.assert.equal(url.search, '?search');
+                chai.assert.equal(url.search, '?search&param=value');
                 chai.assert.equal(url.hash, '#hash');
 
                 chai.assert.equal(url.host, 'domain.tld:1337');
                 chai.assert.equal(url.user, 'user');
                 chai.assert.equal(url.pass, 'pass');
-                chai.assert.equal(url.path, '/path?search');
+                chai.assert.equal(url.path, '/path?search&param=value');
+                chai.assert.deepEqual(url.query, {
+                    search: null,
+                    param: 'value'
+                });
+            });
+
+            it('Should format a simple URL', function() {
+                var url = new EasyUrl('http://user:pass@domain.tld:1337/path?search&param=value#hash');
+
+                delete url.path;
+                delete url.host;
+
+                url.hostname = 'changed.domain.tld';
+                url.port = 42;
+                url.pathname = '/new/path';
+
+                url.query = {
+                    newsearch: 'value',
+                    newparam: null
+                };
+
+                url = url.toString();
+
+                chai.assert.equal(url, 'http://user:pass@changed.domain.tld:42/new/path?newsearch=value&newparam#hash');
             });
         });
     }
