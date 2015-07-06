@@ -105,6 +105,7 @@
 
             format: function format() {
                 this.href = this.toString();
+                return this.href;
             },
 
             toObject: function toObject(simple) {
