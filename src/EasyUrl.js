@@ -122,28 +122,7 @@
             },
 
             toString: function toString() {
-                var urlString = '';
-
-                if (this.hostname || this.host) {
-                    if (this.protocol) {
-                        urlString += this.protocol;
-                        if (this.slashedProtocol) {
-                            urlString += '//';
-                        }
-                    }
-
-                    if (this.auth || this.user) {
-                        urlString += (this.auth || EasyUrl.formatAuth(this.user, this.pass)) + '@';
-                    }
-
-                    urlString += this.host || EasyUrl.buildHost(this.hostname, this.port);
-                }
-
-                urlString += this.path || EasyUrl.buildPath(this.pathname, this.query || this.search);
-
-                urlString += this.hash || '';
-
-                return urlString;
+                return EasyUrl.format(this);
             }
         };
 
@@ -194,6 +173,31 @@
             parsedUrl.port = relativeTo.port;
 
             return parsedUrl;
+        };
+
+        EasyUrl.format = function format(urlObject) {
+            var urlString = '';
+
+            if (urlObject.hostname || urlObject.host) {
+                if (urlObject.protocol) {
+                    urlString += urlObject.protocol;
+                    if (urlObject.slashedProtocol !== false) {
+                        urlString += '//';
+                    }
+                }
+
+                if (urlObject.auth || urlObject.user) {
+                    urlString += (urlObject.auth || EasyUrl.formatAuth(urlObject.user, urlObject.pass)) + '@';
+                }
+
+                urlString += urlObject.host || EasyUrl.buildHost(urlObject.hostname, urlObject.port);
+            }
+
+            urlString += urlObject.path || EasyUrl.buildPath(urlObject.pathname, urlObject.query || urlObject.search);
+
+            urlString += urlObject.hash || '';
+
+            return urlString;
         };
 
         EasyUrl.parseAuth = function parseAuth(auth) {
