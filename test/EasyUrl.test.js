@@ -1,6 +1,10 @@
 (function(global) {
     function factory(EasyUrl, chai, sinon) {
 
+        function cloneAndProtectForNullValues(object) {
+            return JSON.parse(JSON.stringify(object).replace(/:null(\,|\}|\])/g, ':"protected null value"$1'));
+        }
+
         return describe('EasyUrl', function() {
             it('Should parse a simple URL', function() {
                 var url = new EasyUrl('http://user:pass@domain.tld:1337/path?search&param=value#hash');
@@ -65,34 +69,26 @@
             it('Should return an URL object with toObject method', function() {
                 var url = new EasyUrl('http://user:pass@domain.tld:1337/path?search&param=value#hash');
 
-                try {
-                    chai.assert.deepEqual(url.toObject(), {
-                        protocol: "http:",
-                        slashedProtocol: true,
-                        auth: "user:pass",
-                        hostname:  "domain.tld",
-                        port: 1337,
-                        pathname: "/path",
-                        search: "?search&param=value",
-                        hash: "#hash",
-                        user: "user",
-                        pass: "pass",
-                        host: "domain.tld:1337",
-                        path: "/path?search&param=value",
-                        query: {
-                            search: null,
-                            param: "value"
-                        }
-                    });
-                }
-                catch(error) {
-                    console.log('actual:');
-                    console.log(error.actual);
-                    console.log('expected:');
-                    console.log(error.expected);
+                var result = cloneAndProtectForNullValues(url.toObject());
 
-                    throw new Error('This error object makes mocha-phantomjs crash so we throw another one');
-                }
+                chai.assert.deepEqual(result, {
+                    protocol: "http:",
+                    slashedProtocol: true,
+                    auth: "user:pass",
+                    hostname:  "domain.tld",
+                    port: 1337,
+                    pathname: "/path",
+                    search: "?search&param=value",
+                    hash: "#hash",
+                    user: "user",
+                    pass: "pass",
+                    host: "domain.tld:1337",
+                    path: "/path?search&param=value",
+                    query: {
+                        search: "protected null value",
+                        param: "value"
+                    }
+                });
             });
 
         });
