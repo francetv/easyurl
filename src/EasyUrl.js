@@ -187,7 +187,7 @@
                 }
 
                 if (urlObject.auth || urlObject.user) {
-                    urlString += (urlObject.auth || EasyUrl.formatAuth(urlObject.user, urlObject.pass)) + '@';
+                    urlString += (urlObject.auth || EasyUrl.formatAuth({user: urlObject.user, pass: urlObject.pass})) + '@';
                 }
 
                 urlString += urlObject.host || EasyUrl.buildHost(urlObject.hostname, urlObject.port);
