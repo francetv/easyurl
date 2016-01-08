@@ -91,6 +91,49 @@
                 });
             });
 
+            it('should decode URIencoded values', function() {
+                var url = new EasyUrl('http://us%3Aer:pa%2Fss@domain.tld:1337/path?sea%26rch&par%2Fam=va%3Dlue#hash');
+
+                var result = cloneAndProtectForNullValues(url.toObject());
+
+                chai.assert.deepEqual(result, {
+                    protocol: "http:",
+                    slashedProtocol: true,
+                    auth: "us%3Aer:pa%2Fss",
+                    hostname:  "domain.tld",
+                    port: 1337,
+                    pathname: "/path",
+                    search: "?sea%26rch&par%2Fam=va%3Dlue",
+                    hash: "#hash",
+                    user: "us:er",
+                    pass: "pa/ss",
+                    host: "domain.tld:1337",
+                    path: "/path?sea%26rch&par%2Fam=va%3Dlue",
+                    query: {
+                        'sea&rch': "protected null value",
+                        'par/am': "va=lue"
+                    }
+                });
+            });
+
+            it('should encode URI components', function() {
+                var url = new EasyUrl({
+                    protocol: "http:",
+                    slashedProtocol: true,
+                    hostname:  "domain.tld",
+                    port: 1337,
+                    pathname: "/path",
+                    hash: "#hash",
+                    user: "us:er",
+                    pass: "pa/ss",
+                    query: {
+                        'sea&rch': null,
+                        'par/am': "va=lue"
+                    }
+                });
+
+                chai.assert.deepEqual(url.toString(), 'http://us%3Aer:pa%2Fss@domain.tld:1337/path?sea%26rch&par%2Fam=va%3Dlue#hash');
+            });
         });
     }
 
