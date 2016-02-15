@@ -1,6 +1,10 @@
 (function(global) {
     function factory(EasyUrl, chai, sinon) {
 
+        function cloneAndProtectForNullValues(object) {
+            return JSON.parse(JSON.stringify(object).replace(/:null(\,|\}|\])/g, ':"protected null value"$1'));
+        }
+
         return describe('EasyUrl', function() {
             it('Should parse a simple URL', function() {
                 var url = new EasyUrl('http://user:pass@domain.tld:1337/path?search&param=value#hash');
@@ -65,36 +69,71 @@
             it('Should return an URL object with toObject method', function() {
                 var url = new EasyUrl('http://user:pass@domain.tld:1337/path?search&param=value#hash');
 
-                try {
-                    chai.assert.deepEqual(url.toObject(), {
-                        protocol: "http:",
-                        slashedProtocol: true,
-                        auth: "user:pass",
-                        hostname:  "domain.tld",
-                        port: 1337,
-                        pathname: "/path",
-                        search: "?search&param=value",
-                        hash: "#hash",
-                        user: "user",
-                        pass: "pass",
-                        host: "domain.tld:1337",
-                        path: "/path?search&param=value",
-                        query: {
-                            search: null,
-                            param: "value"
-                        }
-                    });
-                }
-                catch(error) {
-                    console.log('actual:');
-                    console.log(error.actual);
-                    console.log('expected:');
-                    console.log(error.expected);
+                var result = cloneAndProtectForNullValues(url.toObject());
 
-                    throw new Error('This error object makes mocha-phantomjs crash so we throw another one');
-                }
+                chai.assert.deepEqual(result, {
+                    protocol: "http:",
+                    slashedProtocol: true,
+                    auth: "user:pass",
+                    hostname:  "domain.tld",
+                    port: 1337,
+                    pathname: "/path",
+                    search: "?search&param=value",
+                    hash: "#hash",
+                    user: "user",
+                    pass: "pass",
+                    host: "domain.tld:1337",
+                    path: "/path?search&param=value",
+                    query: {
+                        search: "protected null value",
+                        param: "value"
+                    }
+                });
             });
 
+            it('should decode URIencoded values', function() {
+                var url = new EasyUrl('http://us%3Aer:pa%2Fss@domain.tld:1337/path?sea%26rch&par%2Fam=va%3Dlue#hash');
+
+                var result = cloneAndProtectForNullValues(url.toObject());
+
+                chai.assert.deepEqual(result, {
+                    protocol: "http:",
+                    slashedProtocol: true,
+                    auth: "us%3Aer:pa%2Fss",
+                    hostname:  "domain.tld",
+                    port: 1337,
+                    pathname: "/path",
+                    search: "?sea%26rch&par%2Fam=va%3Dlue",
+                    hash: "#hash",
+                    user: "us:er",
+                    pass: "pa/ss",
+                    host: "domain.tld:1337",
+                    path: "/path?sea%26rch&par%2Fam=va%3Dlue",
+                    query: {
+                        'sea&rch': "protected null value",
+                        'par/am': "va=lue"
+                    }
+                });
+            });
+
+            it('should encode URI components', function() {
+                var url = new EasyUrl({
+                    protocol: "http:",
+                    slashedProtocol: true,
+                    hostname:  "domain.tld",
+                    port: 1337,
+                    pathname: "/path",
+                    hash: "#hash",
+                    user: "us:er",
+                    pass: "pa/ss",
+                    query: {
+                        'sea&rch': null,
+                        'par/am': "va=lue"
+                    }
+                });
+
+                chai.assert.deepEqual(url.toString(), 'http://us%3Aer:pa%2Fss@domain.tld:1337/path?sea%26rch&par%2Fam=va%3Dlue#hash');
+            });
         });
     }
 

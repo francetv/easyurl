@@ -187,7 +187,7 @@
                 }
 
                 if (urlObject.auth || urlObject.user) {
-                    urlString += (urlObject.auth || EasyUrl.formatAuth(urlObject.user, urlObject.pass)) + '@';
+                    urlString += (urlObject.auth || EasyUrl.formatAuth({user: urlObject.user, pass: urlObject.pass})) + '@';
                 }
 
                 urlString += urlObject.host || EasyUrl.buildHost(urlObject.hostname, urlObject.port);
@@ -206,19 +206,19 @@
 
             authColonIdx = auth.indexOf(':');
             if (authColonIdx !== -1) {
-                parsed.user = auth.slice(0, authColonIdx);
-                parsed.pass = auth.slice(authColonIdx + 1);
+                parsed.user = decodeURIComponent(auth.slice(0, authColonIdx));
+                parsed.pass = decodeURIComponent(auth.slice(authColonIdx + 1));
             } else {
-                parsed.user = auth;
+                parsed.user = decodeURIComponent(auth);
             }
 
             return parsed;
         };
 
         EasyUrl.formatAuth = function formatAuth(auth) {
-            var result = auth.user;
+            var result = encodeURIComponent(auth.user);
             if (auth.pass) {
-                result += ':' + auth.pass;
+                result += ':' + encodeURIComponent(auth.pass);
             }
             return result;
         };
@@ -267,11 +267,11 @@
                 equalIdx = param.indexOf('=');
 
                 if (equalIdx === -1) {
-                    query[param] = null;
+                    query[decodeURIComponent(param)] = null;
                     return;
                 }
 
-                query[param.substr(0, equalIdx)] = param.substr(equalIdx + 1);
+                query[decodeURIComponent(param.substr(0, equalIdx))] = decodeURIComponent(param.substr(equalIdx + 1));
             });
 
             return query;
@@ -279,9 +279,9 @@
 
         EasyUrl.formatQuery = function formatQuery(query) {
             var search = Object.keys(query).map(function(key) {
-                var param = key;
+                var param = encodeURIComponent(key);
                 if (query[key] !== null) {
-                    param += '=' + query[key];
+                    param += '=' + encodeURIComponent(query[key]);
                 }
                 return param;
             }).join('&');
