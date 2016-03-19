@@ -1,306 +1,306 @@
-(function(global) {
-    "use strict";
+/* global define */
 
-    function factory() {
-        /**
+(function (global) {
+  'use strict';
 
-        Composant d'origine :
-            - href
+  function factory () {
+    /**
 
-        Composants brut :
+    Composant d'origine :
+        - href
 
-            - protocol (avec : et en minuscule)
-            - slashedProtocol (:// ou :)
-            - auth (sans @ final)
-            - hostname
-            - port (sans :)
-            - pathname (avec / initial)
-            - search (avec ?)
-            - hash (avec #)
+    Composants brut :
 
-        Composants complémentaires :
-            - user
-            - pass
-            - host (hostname + port)
-            - path (pathname + search)
-            - query (search parsé en objet JS)
+        - protocol (avec : et en minuscule)
+        - slashedProtocol (:// ou :)
+        - auth (sans @ final)
+        - hostname
+        - port (sans :)
+        - pathname (avec / initial)
+        - search (avec ?)
+        - hash (avec #)
 
-        */
+    Composants complémentaires :
+        - user
+        - pass
+        - host (hostname + port)
+        - path (pathname + search)
+        - query (search parsé en objet JS)
 
-        var properties = {
-            protocol: true,
-            slashedProtocol: true,
-            auth: true,
-            hostname: true,
-            port: true,
-            pathname: true,
-            search: true,
-            hash: true,
+    */
 
-            user: false,
-            pass: false,
-            host: false,
-            path: false,
-            query: false
-        };
+    var properties = {
+      protocol: true,
+      slashedProtocol: true,
+      auth: true,
+      hostname: true,
+      port: true,
+      pathname: true,
+      search: true,
+      hash: true,
 
+      user: false,
+      pass: false,
+      host: false,
+      path: false,
+      query: false
+    };
 
-        function EasyUrl() {
-            return this.init.apply(this, arguments);
+    function EasyUrl () {
+      return this.init.apply(this, arguments);
+    }
+
+    EasyUrl.prototype = {
+      pattern_href: /^(?:([a-z]{1,6}\:)(\/\/)?)?(?:([^\/@]*?)@)?(.*?)(?::([^0-9]+))?(\/[^\?]*?)?(\?[^#]*?)?(#.*)?$/i,
+
+      init: function init (href, relativeTo) {
+        var key;
+
+        if (relativeTo) {
+          if (!(relativeTo instanceof EasyUrl)) {
+            relativeTo = new EasyUrl(relativeTo);
+          }
+
+          this.base = relativeTo;
         }
 
-        EasyUrl.prototype = {
-            pattern_href: /^(?:([a-z]{1,6}\:)(\/\/)?)?(?:([^\/@]*?)@)?(.*?)(?::([^0-9]+))?(\/[^\?]*?)?(\?[^#]*?)?(#.*)?$/i,
-
-            init: function init(href, relativeTo) {
-                var key;
-
-                if (relativeTo) {
-                    if (!(relativeTo instanceof EasyUrl)) {
-                        relativeTo = new EasyUrl(relativeTo);
-                    }
-
-                    this.base = relativeTo;
-                }
-
-                if (href) {
-                    if (typeof href === 'string') {
-                        this.href = href;
-                        this.parse();
-                    } else {
-                        for (key in href) {
-                            if (key in properties) {
-                                this[key] = href[key];
-                            }
-                        }
-                        this.format();
-                    }
-                }
-            },
-
-            parse: function parse() {
-                var parsedUrl = EasyUrl.parse(this.href, this.base);
-                var auth;
-
-                Object.keys(parsedUrl).forEach(function(key) {
-                    this[key] = parsedUrl[key];
-                }.bind(this));
-
-                if (this.hostname) {
-                    this.host = EasyUrl.buildHost(this.hostname, this.port);
-                }
-
-                if (this.pathname || this.search) {
-                    this.path = EasyUrl.buildPath(this.pathname, this.search);
-                }
-
-                if (this.auth) {
-                    auth = EasyUrl.parseAuth(this.auth);
-                    this.user = auth.user;
-                    this.pass = auth.pass;
-                }
-
-                this.query = EasyUrl.parseQuery(this.search);
-            },
-
-            format: function format() {
-                this.href = this.toString();
-                return this.href;
-            },
-
-            toObject: function toObject(simple) {
-                var object = {};
-                var key;
-
-                for (key in properties) {
-                    if (!simple || properties[key]) {
-                        object[key] = this[key];
-                    }
-                }
-
-                return object;
-            },
-
-            toString: function toString() {
-                return EasyUrl.format(this);
+        if (href) {
+          if (typeof href === 'string') {
+            this.href = href;
+            this.parse();
+          } else {
+            for (key in href) {
+              if (key in properties) {
+                this[key] = href[key];
+              }
             }
-        };
+            this.format();
+          }
+        }
+      },
 
-        EasyUrl.pattern_url = /^(?:([a-z]{1,6}\:)(\/\/)?)?(?:([^\/@]*?)@)?(.*?)(?::([0-9]+))?(\/[^\?]*?)?(\?[^#]*?)?(#.*)?$/i;
+      parse: function parse () {
+        var parsedUrl = EasyUrl.parse(this.href, this.base);
+        var auth;
 
-        EasyUrl.parse = function parse(url, relativeTo) {
-            var urlMatch = EasyUrl.pattern_url.exec(url);
-            var basePath;
+        Object.keys(parsedUrl).forEach(function (key) {
+          this[key] = parsedUrl[key];
+        }.bind(this));
 
-            var parsedUrl = {};
+        if (this.hostname) {
+          this.host = EasyUrl.buildHost(this.hostname, this.port);
+        }
 
-            if (!urlMatch) {
-                throw new Error('EasyUrl Parse Error on URL: ' + url);
-            }
+        if (this.pathname || this.search) {
+          this.path = EasyUrl.buildPath(this.pathname, this.search);
+        }
 
-            parsedUrl.protocol = urlMatch[1];
-            parsedUrl.slashedProtocol = parsedUrl.protocol && !!urlMatch[2];
-            parsedUrl.auth = urlMatch[3];
-            parsedUrl.hostname = urlMatch[4];
-            parsedUrl.port = +urlMatch[5] || undefined;
-            parsedUrl.pathname = urlMatch[6];
-            parsedUrl.search = urlMatch[7];
-            parsedUrl.hash = urlMatch[8];
+        if (this.auth) {
+          auth = EasyUrl.parseAuth(this.auth);
+          this.user = auth.user;
+          this.pass = auth.pass;
+        }
 
-            if (parsedUrl.protocol || parsedUrl.auth || parsedUrl.port || !relativeTo) {
-                return parsedUrl;
-            }
+        this.query = EasyUrl.parseQuery(this.search);
+      },
 
-            if (typeof relativeTo === 'string') {
-                relativeTo = EasyUrl.parse(relativeTo);
-            }
+      format: function format () {
+        this.href = this.toString();
+        return this.href;
+      },
 
-            parsedUrl.pathname = parsedUrl.hostname + (parsedUrl.pathname || '');
-            if (parsedUrl.pathname[0] !== '/') {
-                parsedUrl.pathname = '/' + parsedUrl.pathname;
-            }
+      toObject: function toObject (simple) {
+        var object = {};
+        var key;
 
-            if (relativeTo.pathname) {
-                basePath = relativeTo.pathname.split('/');
-                basePath.length--;
-                parsedUrl.pathname = basePath.join('/') + parsedUrl.pathname;
-            }
+        for (key in properties) {
+          if (!simple || properties[key]) {
+            object[key] = this[key];
+          }
+        }
 
-            parsedUrl.protocol = relativeTo.protocol;
-            parsedUrl.slashedProtocol = relativeTo.slashedProtocol;
-            parsedUrl.auth = relativeTo.auth;
-            parsedUrl.hostname = relativeTo.hostname;
-            parsedUrl.port = relativeTo.port;
+        return object;
+      },
 
-            return parsedUrl;
-        };
+      toString: function toString () {
+        return EasyUrl.format(this);
+      }
+    };
 
-        EasyUrl.format = function format(urlObject) {
-            var urlString = '';
+    EasyUrl.pattern_url = /^(?:([a-z]{1,6}\:)(\/\/)?)?(?:([^\/@]*?)@)?(.*?)(?::([0-9]+))?(\/[^\?]*?)?(\?[^#]*?)?(#.*)?$/i;
 
-            if (urlObject.hostname || urlObject.host) {
-                if (urlObject.protocol) {
-                    urlString += urlObject.protocol;
-                    if (urlObject.slashedProtocol !== false) {
-                        urlString += '//';
-                    }
-                }
+    EasyUrl.parse = function parse (url, relativeTo) {
+      var urlMatch = EasyUrl.pattern_url.exec(url);
+      var basePath;
 
-                if (urlObject.auth || urlObject.user) {
-                    urlString += (urlObject.auth || EasyUrl.formatAuth({user: urlObject.user, pass: urlObject.pass})) + '@';
-                }
+      var parsedUrl = {};
 
-                urlString += urlObject.host || EasyUrl.buildHost(urlObject.hostname, urlObject.port);
-            }
+      if (!urlMatch) {
+        throw new Error('EasyUrl Parse Error on URL: ' + url);
+      }
 
-            urlString += urlObject.path || EasyUrl.buildPath(urlObject.pathname, urlObject.query || urlObject.search);
+      parsedUrl.protocol = urlMatch[1];
+      parsedUrl.slashedProtocol = parsedUrl.protocol && !!urlMatch[2];
+      parsedUrl.auth = urlMatch[3];
+      parsedUrl.hostname = urlMatch[4];
+      parsedUrl.port = +urlMatch[5] || undefined;
+      parsedUrl.pathname = urlMatch[6];
+      parsedUrl.search = urlMatch[7];
+      parsedUrl.hash = urlMatch[8];
 
-            urlString += urlObject.hash || '';
+      if (parsedUrl.protocol || parsedUrl.auth || parsedUrl.port || !relativeTo) {
+        return parsedUrl;
+      }
 
-            return urlString;
-        };
+      if (typeof relativeTo === 'string') {
+        relativeTo = EasyUrl.parse(relativeTo);
+      }
 
-        EasyUrl.parseAuth = function parseAuth(auth) {
-            var parsed = {};
-            var authColonIdx;
+      parsedUrl.pathname = parsedUrl.hostname + (parsedUrl.pathname || '');
+      if (parsedUrl.pathname[0] !== '/') {
+        parsedUrl.pathname = '/' + parsedUrl.pathname;
+      }
 
-            authColonIdx = auth.indexOf(':');
-            if (authColonIdx !== -1) {
-                parsed.user = decodeURIComponent(auth.slice(0, authColonIdx));
-                parsed.pass = decodeURIComponent(auth.slice(authColonIdx + 1));
-            } else {
-                parsed.user = decodeURIComponent(auth);
-            }
+      if (relativeTo.pathname) {
+        basePath = relativeTo.pathname.split('/');
+        basePath.length--;
+        parsedUrl.pathname = basePath.join('/') + parsedUrl.pathname;
+      }
 
-            return parsed;
-        };
+      parsedUrl.protocol = relativeTo.protocol;
+      parsedUrl.slashedProtocol = relativeTo.slashedProtocol;
+      parsedUrl.auth = relativeTo.auth;
+      parsedUrl.hostname = relativeTo.hostname;
+      parsedUrl.port = relativeTo.port;
 
-        EasyUrl.formatAuth = function formatAuth(auth) {
-            var result = encodeURIComponent(auth.user);
-            if (auth.pass) {
-                result += ':' + encodeURIComponent(auth.pass);
-            }
-            return result;
-        };
+      return parsedUrl;
+    };
 
-        EasyUrl.buildHost = function buildHost(hostname, port) {
-            var host = hostname;
+    EasyUrl.format = function format (urlObject) {
+      var urlString = '';
 
-            if (port) {
-                host+= ':' + port;
-            }
+      if (urlObject.hostname || urlObject.host) {
+        if (urlObject.protocol) {
+          urlString += urlObject.protocol;
+          if (urlObject.slashedProtocol !== false) {
+            urlString += '//';
+          }
+        }
 
-            return host;
-        };
+        if (urlObject.auth || urlObject.user) {
+          urlString += (urlObject.auth || EasyUrl.formatAuth({user: urlObject.user, pass: urlObject.pass})) + '@';
+        }
 
-        EasyUrl.buildPath = function buildPath(pathname, search) {
-            var path = pathname || '';
+        urlString += urlObject.host || EasyUrl.buildHost(urlObject.hostname, urlObject.port);
+      }
 
-            if (typeof search === 'string') {
-                path += search;
-            }
-            else if (typeof search === 'object') {
-                path += EasyUrl.formatQuery(search);
-            }
+      urlString += urlObject.path || EasyUrl.buildPath(urlObject.pathname, urlObject.query || urlObject.search);
 
-            return path;
-        };
+      urlString += urlObject.hash || '';
 
-        EasyUrl.parseQuery = function parseQuery(search) {
-            var query = {};
+      return urlString;
+    };
 
-            if (!search) {
-                return query;
-            }
+    EasyUrl.parseAuth = function parseAuth (auth) {
+      var parsed = {};
+      var authColonIdx;
 
-            if (search[0] === '?') {
-                search = search.substr(1);
-            }
+      authColonIdx = auth.indexOf(':');
+      if (authColonIdx !== -1) {
+        parsed.user = decodeURIComponent(auth.slice(0, authColonIdx));
+        parsed.pass = decodeURIComponent(auth.slice(authColonIdx + 1));
+      } else {
+        parsed.user = decodeURIComponent(auth);
+      }
 
-            search.split('&').forEach(function(param) {
-                var equalIdx;
+      return parsed;
+    };
 
-                if (!param) {
-                    return;
-                }
+    EasyUrl.formatAuth = function formatAuth (auth) {
+      var result = encodeURIComponent(auth.user);
+      if (auth.pass) {
+        result += ':' + encodeURIComponent(auth.pass);
+      }
+      return result;
+    };
 
-                equalIdx = param.indexOf('=');
+    EasyUrl.buildHost = function buildHost (hostname, port) {
+      var host = hostname;
 
-                if (equalIdx === -1) {
-                    query[decodeURIComponent(param)] = null;
-                    return;
-                }
+      if (port) {
+        host += ':' + port;
+      }
 
-                query[decodeURIComponent(param.substr(0, equalIdx))] = decodeURIComponent(param.substr(equalIdx + 1));
-            });
+      return host;
+    };
 
-            return query;
-        };
+    EasyUrl.buildPath = function buildPath (pathname, search) {
+      var path = pathname || '';
 
-        EasyUrl.formatQuery = function formatQuery(query) {
-            var search = Object.keys(query).map(function(key) {
-                var param = encodeURIComponent(key);
-                if (query[key] !== null) {
-                    param += '=' + encodeURIComponent(query[key]);
-                }
-                return param;
-            }).join('&');
+      if (typeof search === 'string') {
+        path += search;
+      } else if (typeof search === 'object') {
+        path += EasyUrl.formatQuery(search);
+      }
 
-            if (search) {
-                return '?' + search;
-            }
+      return path;
+    };
 
-            return '';
-        };
+    EasyUrl.parseQuery = function parseQuery (search) {
+      var query = {};
 
-        return EasyUrl;
-    }
+      if (!search) {
+        return query;
+      }
 
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define('EasyUrl', [], factory);
-    } else {
-        // Browser globals
-        global.EasyUrl = factory();
-    }
+      if (search[0] === '?') {
+        search = search.substr(1);
+      }
+
+      search.split('&').forEach(function (param) {
+        var equalIdx;
+
+        if (!param) {
+          return;
+        }
+
+        equalIdx = param.indexOf('=');
+
+        if (equalIdx === -1) {
+          query[decodeURIComponent(param)] = null;
+          return;
+        }
+
+        query[decodeURIComponent(param.substr(0, equalIdx))] = decodeURIComponent(param.substr(equalIdx + 1));
+      });
+
+      return query;
+    };
+
+    EasyUrl.formatQuery = function formatQuery (query) {
+      var search = Object.keys(query).map(function (key) {
+        var param = encodeURIComponent(key);
+        if (query[key] !== null) {
+          param += '=' + encodeURIComponent(query[key]);
+        }
+        return param;
+      }).join('&');
+
+      if (search) {
+        return '?' + search;
+      }
+
+      return '';
+    };
+
+    return EasyUrl;
+  }
+
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define('EasyUrl', [], factory);
+  } else {
+    // Browser globals
+    global.EasyUrl = factory();
+  }
 }(this));

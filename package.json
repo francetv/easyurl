@@ -14,13 +14,14 @@
   },
   "main": "src/EasyUrl.js",
   "scripts": {
+    "pre-commit": "npm run -s lint && npm run -s test",
     "postinstall": "bower install",
-    "test": "grunt test:dev",
-    "lint": "jshint .",
-    "validate": "npm ls"
+    "lint": "semistandard $(git diff --name-only --cached --diff-filter=ACMRTUXB | grep '.js$')",
+    "test": "grunt test:dev"
   },
   "devDependencies": {
     "bower": "*",
+    "captain-git-hook": "https://github.com/francetv/captain-git-hook.git",
     "ftv-mergeup": "*",
     "ftv-prerelease": "*",
     "ftv-release": "*",
@@ -33,11 +34,9 @@
     "grunt-contrib-watch": "*",
     "grunt-mocha-phantomjs": "*",
     "jscoverage": "*",
-    "jshint": "*",
-    "json2htmlcov": "git://github.com/francetv/json2htmlcov.git",
+    "json2htmlcov": "https://github.com/francetv/json2htmlcov.git",
     "mocha-phantomjs": "*",
-    "morkdown": "*",
-    "precommit-hook": "*"
+    "semistandard": "*"
   },
   "directories": {
     "test": "test"
