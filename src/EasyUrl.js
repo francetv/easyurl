@@ -47,13 +47,13 @@
     };
 
     function EasyUrl () {
-      return this.init.apply(this, arguments);
+      return this._init.apply(this, arguments);
     }
 
     EasyUrl.prototype = {
       pattern_href: /^(?:([a-z]{1,6}\:)(\/\/)?)?(?:([^\/@]*?)@)?(.*?)(?::([^0-9]+))?(\/[^\?]*?)?(\?[^#]*?)?(#.*)?$/i,
 
-      init: function init (href, relativeTo) {
+      _init: function _init (href, relativeTo) {
         var key;
 
         if (relativeTo) {
@@ -67,46 +67,62 @@
         if (href) {
           if (typeof href === 'string') {
             this.href = href;
-            this.parse();
           } else {
             for (key in href) {
               if (key in properties) {
                 this[key] = href[key];
               }
             }
-            this.format();
           }
         }
       },
 
-      parse: function parse () {
-        var parsedUrl = EasyUrl.parse(this.href, this.base);
-        var auth;
+      get auth () {
+        return EasyUrl.formatAuth({ user: this.user, pass: this.pass });
+      },
+
+      set auth (auth) {
+        delete this.user;
+        delete this.pass;
+
+        if (typeof auth === 'string') {
+          auth = EasyUrl.parseAuth(auth);
+        }
+
+        if (auth.user) {
+          this.user = auth.user;
+          if (auth.pass) {
+            this.pass = auth.pass;
+          }
+        }
+      },
+
+      get host () {
+        return EasyUrl.buildHost(this.hostname, this.port);
+      },
+
+      get path () {
+        return EasyUrl.buildPath(this.pathname, this.query);
+      },
+
+      get search () {
+        return EasyUrl.formatQuery(this.query);
+      },
+
+      set search (search) {
+        this.query = EasyUrl.parseQuery(search);
+      },
+
+      get href () {
+        return this.toString();
+      },
+
+      set href (href) {
+        var parsedUrl = EasyUrl.parse(href, this.base);
 
         Object.keys(parsedUrl).forEach(function (key) {
           this[key] = parsedUrl[key];
         }.bind(this));
-
-        if (this.hostname) {
-          this.host = EasyUrl.buildHost(this.hostname, this.port);
-        }
-
-        if (this.pathname || this.search) {
-          this.path = EasyUrl.buildPath(this.pathname, this.search);
-        }
-
-        if (this.auth) {
-          auth = EasyUrl.parseAuth(this.auth);
-          this.user = auth.user;
-          this.pass = auth.pass;
-        }
-
-        this.query = EasyUrl.parseQuery(this.search);
-      },
-
-      format: function format () {
-        this.href = this.toString();
-        return this.href;
       },
 
       toObject: function toObject (simple) {
@@ -132,6 +148,7 @@
     EasyUrl.parse = function parse (url, relativeTo) {
       var urlMatch = EasyUrl.pattern_url.exec(url);
       var basePath;
+      var auth;
 
       var parsedUrl = {};
 
@@ -139,26 +156,35 @@
         throw new Error('EasyUrl Parse Error on URL: ' + url);
       }
 
-      parsedUrl.protocol = urlMatch[1];
+      parsedUrl.protocol = urlMatch[1] || undefined;
       parsedUrl.slashedProtocol = parsedUrl.protocol && !!urlMatch[2];
-      parsedUrl.auth = urlMatch[3];
       parsedUrl.hostname = urlMatch[4];
       parsedUrl.port = +urlMatch[5] || undefined;
       parsedUrl.pathname = urlMatch[6];
-      parsedUrl.search = urlMatch[7];
-      parsedUrl.hash = urlMatch[8];
+      parsedUrl.query = EasyUrl.parseQuery(urlMatch[7]);
+      parsedUrl.hash = urlMatch[8] || undefined;
 
-      if (parsedUrl.protocol || parsedUrl.auth || parsedUrl.port || !relativeTo) {
+      if (urlMatch[3]) {
+        auth = EasyUrl.parseAuth(urlMatch[3]);
+        parsedUrl.user = auth.user;
+        parsedUrl.pass = auth.pass;
+      }
+
+      // In all those cases, given URL can't be relative. Paring is finished
+      if (!relativeTo || parsedUrl.protocol || auth || parsedUrl.port) {
         return parsedUrl;
+      }
+
+      // Given URL is relative to some other URL.
+      // so there's no hostname, it is the begining of the pathname
+      // Let start by fixing this
+      parsedUrl.pathname = parsedUrl.hostname + (parsedUrl.pathname || '');
+      if (parsedUrl.pathname[0] !== '/') {
+        parsedUrl.pathname = '/' + parsedUrl.pathname;
       }
 
       if (typeof relativeTo === 'string') {
         relativeTo = EasyUrl.parse(relativeTo);
-      }
-
-      parsedUrl.pathname = parsedUrl.hostname + (parsedUrl.pathname || '');
-      if (parsedUrl.pathname[0] !== '/') {
-        parsedUrl.pathname = '/' + parsedUrl.pathname;
       }
 
       if (relativeTo.pathname) {
@@ -169,7 +195,8 @@
 
       parsedUrl.protocol = relativeTo.protocol;
       parsedUrl.slashedProtocol = relativeTo.slashedProtocol;
-      parsedUrl.auth = relativeTo.auth;
+      parsedUrl.user = relativeTo.user;
+      parsedUrl.pass = relativeTo.pass;
       parsedUrl.hostname = relativeTo.hostname;
       parsedUrl.port = relativeTo.port;
 
@@ -187,7 +214,7 @@
           }
         }
 
-        if (urlObject.auth || urlObject.user) {
+        if (urlObject.user || urlObject.auth) {
           urlString += (urlObject.auth || EasyUrl.formatAuth({user: urlObject.user, pass: urlObject.pass})) + '@';
         }
 
@@ -205,18 +232,23 @@
       var parsed = {};
       var authColonIdx;
 
-      authColonIdx = auth.indexOf(':');
-      if (authColonIdx !== -1) {
-        parsed.user = decodeURIComponent(auth.slice(0, authColonIdx));
-        parsed.pass = decodeURIComponent(auth.slice(authColonIdx + 1));
-      } else {
-        parsed.user = decodeURIComponent(auth);
+      if (auth) {
+        authColonIdx = auth.indexOf(':');
+        if (authColonIdx !== -1) {
+          parsed.user = decodeURIComponent(auth.slice(0, authColonIdx));
+          parsed.pass = decodeURIComponent(auth.slice(authColonIdx + 1));
+        } else {
+          parsed.user = decodeURIComponent(auth);
+        }
       }
 
       return parsed;
     };
 
     EasyUrl.formatAuth = function formatAuth (auth) {
+      if (!auth.user) {
+        return;
+      }
       var result = encodeURIComponent(auth.user);
       if (auth.pass) {
         result += ':' + encodeURIComponent(auth.pass);

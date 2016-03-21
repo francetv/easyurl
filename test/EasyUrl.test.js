@@ -1,7 +1,7 @@
 /* global define describe it */
 
 (function (global) {
-  function factory (EasyUrl, chai, sinon) {
+  function factory (EasyUrl, chai) {
     function cloneAndProtectForNullValues (object) {
       return JSON.parse(JSON.stringify(object).replace(/:null(\,|\}|\])/g, ':"protected null value"$1'));
     }
@@ -31,9 +31,6 @@
       it('Should format a simple URL', function () {
         var url = new EasyUrl('http://user:pass@domain.tld:1337/path?search&param=value#hash');
 
-        delete url.path;
-        delete url.host;
-
         url.hostname = 'changed.domain.tld';
         url.port = 42;
         url.pathname = '/new/path';
@@ -43,8 +40,8 @@
           newparam: null
         };
 
+        chai.assert.equal(url.href, 'http://user:pass@changed.domain.tld:42/new/path?newsearch=value&newparam#hash');
         chai.assert.equal(url.toString(), 'http://user:pass@changed.domain.tld:42/new/path?newsearch=value&newparam#hash');
-        chai.assert.equal(url.format(), 'http://user:pass@changed.domain.tld:42/new/path?newsearch=value&newparam#hash');
       });
 
       it('Should format a URL relative to another', function () {
@@ -142,9 +139,9 @@
     module.exports = factory(require('../src/EasyUrl'), require('chai'));
   } else if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
-    define(['EasyUrl', 'chai', 'sinon', 'mocha'], factory);
+    define(['EasyUrl', 'chai', 'mocha'], factory);
   } else {
     // Browser globals
-    factory(global.EasyUrl, global.chai, global.sinon, global.mocha);
+    factory(global.EasyUrl, global.chai);
   }
 }(this));
