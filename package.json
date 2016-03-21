@@ -17,11 +17,12 @@
     "pre-commit": "npm run -s lint && npm run -s test",
     "postinstall": "bower install",
     "lint": "semistandard $(git diff --name-only --cached --diff-filter=ACMRTUXB | grep '.js$')",
-    "test": "grunt test:dev"
+    "test": "mocha test/EasyUrl.test.js"
   },
   "devDependencies": {
     "bower": "*",
     "captain-git-hook": "https://github.com/francetv/captain-git-hook.git",
+    "chai": "*",
     "ftv-mergeup": "*",
     "ftv-prerelease": "*",
     "ftv-release": "*",
