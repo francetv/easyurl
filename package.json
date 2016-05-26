@@ -23,6 +23,7 @@
     "bower": "*",
     "captain-git-hook": "https://github.com/francetv/captain-git-hook.git",
     "chai": "*",
+    "mocha": "*",
     "ftv-mergeup": "*",
     "ftv-prerelease": "*",
     "ftv-release": "*",
