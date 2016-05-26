@@ -1,6 +1,6 @@
 {
-  "name": "EasyUrl",
-  "version": "1.1.0",
+  "name": "easyurl",
+  "version": "2.0.0",
   "description": "Simple Url parsing tool",
   "authors": [
     "FTVEN"
@@ -16,12 +16,10 @@
   "license": "MIT",
   "private": true,
   "homepage": "https://github.com/francetv/easyurl",
-  "main": "EasyUrl.min.js",
+  "main": "src/EasyUrl.js",
   "devDependencies": {
     "requirejs-bower": "*",
-    "mocha": "*",
-    "chai": "*",
-    "sinonjs": "*"
+    "chai": "*"
   },
   "ignore": [
     "**/.*",
