@@ -1,6 +1,6 @@
 {
   "name": "EasyUrl",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Simple Url parsing tool",
   "author": "FTVEN",
   "keywords": [
@@ -14,30 +14,21 @@
   },
   "main": "src/EasyUrl.js",
   "scripts": {
+    "pre-commit": "npm run -s lint && npm run -s test",
     "postinstall": "bower install",
-    "test": "grunt test:dev",
-    "lint": "jshint .",
-    "validate": "npm ls"
+    "lint": "semistandard $(git diff --name-only --cached --diff-filter=ACMRTUXB | grep '.js$')",
+    "test": "mocha",
+    "coverage": "istanbul cover _mocha"
   },
   "devDependencies": {
-    "bower": "*",
+    "captain-git-hook": "https://github.com/francetv/captain-git-hook.git",
+    "chai": "*",
     "ftv-mergeup": "*",
     "ftv-prerelease": "*",
     "ftv-release": "*",
-    "grunt": "*",
-    "grunt-cli": "*",
-    "grunt-contrib-clean": "*",
-    "grunt-contrib-rename": "*",
-    "grunt-contrib-requirejs": "*",
-    "grunt-contrib-uglify": "*",
-    "grunt-contrib-watch": "*",
-    "grunt-mocha-phantomjs": "*",
-    "jscoverage": "*",
-    "jshint": "*",
-    "json2htmlcov": "git://github.com/francetv/json2htmlcov.git",
-    "mocha-phantomjs": "*",
-    "morkdown": "*",
-    "precommit-hook": "*"
+    "istanbul": "^0.4.5",
+    "mocha": "*",
+    "semistandard": "*"
   },
   "directories": {
     "test": "test"
