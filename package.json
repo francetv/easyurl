@@ -15,7 +15,6 @@
   "main": "src/EasyUrl.js",
   "scripts": {
     "pre-commit": "npm run -s lint && npm run -s test",
-    "postinstall": "bower install",
     "lint": "semistandard $(git diff --name-only --cached --diff-filter=ACMRTUXB | grep '.js$')",
     "test": "mocha",
     "coverage": "istanbul cover _mocha"
@@ -23,19 +22,11 @@
   "devDependencies": {
     "captain-git-hook": "https://github.com/francetv/captain-git-hook.git",
     "chai": "*",
-    "ftv-mergeup": "*",
-    "ftv-prerelease": "*",
-    "ftv-release": "*",
     "istanbul": "^0.4.5",
     "mocha": "*",
     "semistandard": "*"
   },
   "directories": {
     "test": "test"
-  },
-  "pre-commit": [
-    "lint",
-    "validate",
-    "test"
-  ]
+  }
 }

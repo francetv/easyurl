@@ -45,8 +45,6 @@ function EasyUrl () {
 }
 
 EasyUrl.prototype = {
-  pattern_href: /^(?:([a-z]{1,6}:)(\/\/)?)?(?:([^\/@]*?)@)?(.*?)(?::([^0-9]+))?(\/[^\?]*?)?(\?[^#]*?)?(#.*)?$/i,
-
   _init: function _init (href, relativeTo) {
     var key;
 
