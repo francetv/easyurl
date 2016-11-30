@@ -17,27 +17,17 @@
     "pre-commit": "npm run -s lint && npm run -s test",
     "postinstall": "bower install",
     "lint": "semistandard $(git diff --name-only --cached --diff-filter=ACMRTUXB | grep '.js$')",
-    "test": "mocha test/EasyUrl.test.js"
+    "test": "mocha",
+    "coverage": "istanbul cover _mocha"
   },
   "devDependencies": {
-    "bower": "*",
     "captain-git-hook": "https://github.com/francetv/captain-git-hook.git",
     "chai": "*",
-    "mocha": "*",
     "ftv-mergeup": "*",
     "ftv-prerelease": "*",
     "ftv-release": "*",
-    "grunt": "*",
-    "grunt-cli": "*",
-    "grunt-contrib-clean": "*",
-    "grunt-contrib-rename": "*",
-    "grunt-contrib-requirejs": "*",
-    "grunt-contrib-uglify": "*",
-    "grunt-contrib-watch": "*",
-    "grunt-mocha-phantomjs": "*",
-    "jscoverage": "*",
-    "json2htmlcov": "https://github.com/francetv/json2htmlcov.git",
-    "mocha-phantomjs": "*",
+    "istanbul": "^0.4.5",
+    "mocha": "*",
     "semistandard": "*"
   },
   "directories": {
