@@ -2,3 +2,5 @@ node_modules
 /*.min.js
 coverage/
 /mergeUpConf.json
+xunit.xml
+docs.html
