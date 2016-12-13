@@ -135,7 +135,7 @@ EasyUrl.prototype = {
   }
 };
 
-EasyUrl.pattern_url = /^(?:([a-z]{1,6}:)(\/\/)?)?(?:([^\/@]*?)@)?(.*?)(?::([0-9]+))?(\/[^\?]*?)?(\?[^#]*?)?(#.*)?$/i;
+EasyUrl.pattern_url = /^(?:([a-z]{1,6}:)(\/\/)?)?(?:([^/@]*?)@)?(.*?)(?::([0-9]+))?(\/[^?]*?)?(\?[^#]*?)?(#.*)?$/i;
 
 EasyUrl.parse = function parse (url, relativeTo) {
   var urlMatch = EasyUrl.pattern_url.exec(url);
