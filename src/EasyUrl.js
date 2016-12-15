@@ -45,9 +45,7 @@ function EasyUrl () {
 }
 
 EasyUrl.prototype = {
-  _init: function _init (href, relativeTo) {
-    var key;
-
+  _init (href, relativeTo) {
     if (relativeTo) {
       if (!(relativeTo instanceof EasyUrl)) {
         relativeTo = new EasyUrl(relativeTo);
@@ -56,17 +54,20 @@ EasyUrl.prototype = {
       this.base = relativeTo;
     }
 
-    if (href) {
-      if (typeof href === 'string') {
-        this.href = href;
-      } else {
-        for (key in href) {
-          if (key in properties) {
-            this[key] = href[key];
-          }
-        }
-      }
+    if (!href) {
+      return;
     }
+
+    if (typeof href === 'string') {
+      this.href = href;
+      return;
+    }
+
+    Object.keys(href).forEach((key) => {
+      if (key in properties) {
+        this[key] = href[key];
+      }
+    });
   },
 
   get auth () {
@@ -117,29 +118,63 @@ EasyUrl.prototype = {
     }.bind(this));
   },
 
-  toObject: function toObject (simple) {
+  toObject (simple) {
     var object = {};
-    var key;
 
-    for (key in properties) {
+    Object.keys(properties).forEach((key) => {
       if (!simple || properties[key]) {
         object[key] = this[key];
       }
-    }
+    });
 
     return object;
   },
 
-  toString: function toString () {
+  toString () {
     return EasyUrl.format(this);
   }
 };
 
-EasyUrl.pattern_url = /^(?:([a-z]{1,6}:)(\/\/)?)?(?:([^\/@]*?)@)?(.*?)(?::([0-9]+))?(\/[^\?]*?)?(\?[^#]*?)?(#.*)?$/i;
+EasyUrl.pattern_url = new RegExp([
+  // protocol
+  /^(?:([a-z]{1,6}:)?(\/\/)?)?/,
+  // auth (user:pass)
+  /(?:([^/@]*?)@)?/,
+  // host (hostname:port)
+  /(.*?)(?::([0-9]+))?/,
+  // pathname
+  /(\/[^?]*?)?/,
+  // search
+  /(\?[^#]*?)?/,
+  // hash
+  /(#.*)?$/
+].map((r) => r.source).join(''), 'i');
+
+function resolveRelative (from, to) {
+  var resolved = {
+    pathname: to.pathname,
+    query: to.query,
+    hash: to.hash
+  };
+
+  if (from.pathname) {
+    let basePath = from.pathname.split('/');
+    basePath.length--;
+    resolved.pathname = basePath.join('/') + to.pathname;
+  }
+
+  resolved.protocol = from.protocol;
+  resolved.slashedProtocol = from.slashedProtocol;
+  resolved.user = from.user;
+  resolved.pass = from.pass;
+  resolved.hostname = from.hostname;
+  resolved.port = from.port;
+
+  return resolved;
+}
 
 EasyUrl.parse = function parse (url, relativeTo) {
   var urlMatch = EasyUrl.pattern_url.exec(url);
-  var basePath;
   var auth;
 
   var parsedUrl = {};
@@ -162,7 +197,7 @@ EasyUrl.parse = function parse (url, relativeTo) {
     parsedUrl.pass = auth.pass;
   }
 
-  // In all those cases, given URL can't be relative. Paring is finished
+  // In all those cases, given URL can't be relative. Parsing is finished
   if (!relativeTo || parsedUrl.protocol || auth || parsedUrl.port) {
     return parsedUrl;
   }
@@ -179,20 +214,7 @@ EasyUrl.parse = function parse (url, relativeTo) {
     relativeTo = EasyUrl.parse(relativeTo);
   }
 
-  if (relativeTo.pathname) {
-    basePath = relativeTo.pathname.split('/');
-    basePath.length--;
-    parsedUrl.pathname = basePath.join('/') + parsedUrl.pathname;
-  }
-
-  parsedUrl.protocol = relativeTo.protocol;
-  parsedUrl.slashedProtocol = relativeTo.slashedProtocol;
-  parsedUrl.user = relativeTo.user;
-  parsedUrl.pass = relativeTo.pass;
-  parsedUrl.hostname = relativeTo.hostname;
-  parsedUrl.port = relativeTo.port;
-
-  return parsedUrl;
+  return resolveRelative(relativeTo, parsedUrl);
 };
 
 EasyUrl.format = function format (urlObject) {
@@ -207,13 +229,18 @@ EasyUrl.format = function format (urlObject) {
     }
 
     if (urlObject.user || urlObject.auth) {
-      urlString += (urlObject.auth || EasyUrl.formatAuth({user: urlObject.user, pass: urlObject.pass})) + '@';
+      urlString += (
+        urlObject.auth ||
+        EasyUrl.formatAuth({user: urlObject.user, pass: urlObject.pass})
+      ) + '@';
     }
 
-    urlString += urlObject.host || EasyUrl.buildHost(urlObject.hostname, urlObject.port);
+    urlString += urlObject.host ||
+      EasyUrl.buildHost(urlObject.hostname, urlObject.port);
   }
 
-  urlString += urlObject.path || EasyUrl.buildPath(urlObject.pathname, urlObject.query || urlObject.search);
+  urlString += urlObject.path ||
+    EasyUrl.buildPath(urlObject.pathname, urlObject.query || urlObject.search);
 
   urlString += urlObject.hash || '';
 
@@ -222,10 +249,9 @@ EasyUrl.format = function format (urlObject) {
 
 EasyUrl.parseAuth = function parseAuth (auth) {
   var parsed = {};
-  var authColonIdx;
 
   if (auth) {
-    authColonIdx = auth.indexOf(':');
+    let authColonIdx = auth.indexOf(':');
     if (authColonIdx !== -1) {
       parsed.user = decodeURIComponent(auth.slice(0, authColonIdx));
       parsed.pass = decodeURIComponent(auth.slice(authColonIdx + 1));
@@ -281,21 +307,22 @@ EasyUrl.parseQuery = function parseQuery (search) {
     search = search.substr(1);
   }
 
-  search.split('&').forEach(function (param) {
-    var equalIdx;
-
+  search.split('&').forEach((param) => {
     if (!param) {
       return;
     }
 
-    equalIdx = param.indexOf('=');
+    let equalIdx = param.indexOf('=');
 
     if (equalIdx === -1) {
       query[decodeURIComponent(param)] = null;
       return;
     }
 
-    query[decodeURIComponent(param.substr(0, equalIdx))] = decodeURIComponent(param.substr(equalIdx + 1));
+    let key = decodeURIComponent(param.substr(0, equalIdx));
+    let value = decodeURIComponent(param.substr(equalIdx + 1));
+
+    query[key] = value;
   });
 
   return query;
