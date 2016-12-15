@@ -1,6 +1,5 @@
 node_modules
-/*.min.js
-coverage/
-/mergeUpConf.json
+npm-debug.log
+coverage
 xunit.xml
 docs.html
